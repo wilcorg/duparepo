@@ -1,12 +1,14 @@
 #ifndef BIMAP_HPP
 #define BIMAP_HPP
 
-#include <map>
 #include <iterator>
+#include <map>
 
 template<typename Key, typename Value>
-class BiMap {
+class BiMap
+{
 public:
+    class iterator;
     BiMap() = default;
 
     bool exists(const std::pair<Key, Value>& pair) const;
@@ -17,63 +19,8 @@ public:
     Value& atKey(const Key& key) const;
     Key& atValue(const Value& value) const;
 
-    // Forward Iterator Declaration
-    class iterator {
-    public:
-        using iterator_category = std::forward_iterator_tag;
-        using difference_type = std::ptrdiff_t;
-        using value_type = std::pair<const Key&, const Value&>;
-        using pointer = value_type*;
-        using reference = value_type&;
-
-        iterator(typename std::map<Key, Value*>::iterator it) : it_(it)
-            , current_ {std::cref(it_->first), std::cref(*(it_->second))} {}
-
-        // Dereference operator
-        reference operator*() const {
-            // current_ = std::make_pair(std::cref(it_->first), std::cref(*(it_->second)));
-            return current_;
-        }
-
-        pointer operator->() const {
-            return &(operator*());
-        }
-
-        // Pre-increment
-        iterator& operator++() {
-            ++it_;
-            return *this;
-        }
-
-        // Post-increment
-        iterator operator++(int) {
-            iterator tmp = *this;
-            ++(*this);
-            return tmp;
-        }
-
-        // Equality
-        bool operator==(const iterator& other) const {
-            return it_ == other.it_;
-        }
-
-        // Inequality
-        bool operator!=(const iterator& other) const {
-            return it_ != other.it_;
-        }
-
-    private:
-        typename std::map<Key, Value*>::iterator it_;
-        mutable value_type current_;
-    };
-
-    iterator begin() {
-        return iterator(key_valuePtr_.begin());
-    }
-
-    iterator end() {
-        return iterator(key_valuePtr_.end());
-    }
+    iterator begin();
+    iterator end();
 
 private:
     bool existsKey_(const Key& key) const;
@@ -165,4 +112,80 @@ void BiMap<Key, Value>::remove_(const std::pair<Key, Value>& pair)
     value_keyPtr_.erase(pair.second);
 }
 
+template<typename Key, typename Value>
+typename BiMap<Key, Value>::iterator BiMap<Key, Value>::begin()
+{
+    return iterator(key_valuePtr_.begin());
+}
+
+template<typename Key, typename Value>
+typename BiMap<Key, Value>::iterator BiMap<Key, Value>::end()
+{
+    return iterator(key_valuePtr_.end());
+}
+
+template<typename Key, typename Value>
+class BiMap<Key, Value>::iterator
+{
+public:
+    using value_type = std::pair<Key, Value>;
+    using pointer = value_type*;
+    using reference = value_type&;
+    using iterator_category = std::bidirectional_iterator_tag;
+    using difference_type = std::ptrdiff_t;
+
+    explicit iterator(typename std::map<Key, Value*>::iterator it) : it_(it), pair_() {}
+
+    reference operator*() const
+    {
+        pair_ = std::pair<Key, Value>(it_->first, *(it_->second));
+        return pair_;
+    }
+
+    pointer operator->() const
+    {
+        pair_ = std::pair<Key, Value>(it_->first, *(it_->second));
+        return &pair_;
+    }
+
+    iterator& operator++()
+    {
+        ++it_;
+        return *this;
+    }
+
+    iterator operator++(int)
+    {
+        iterator tmp = *this;
+        ++(*this);
+        return tmp;
+    }
+
+    iterator& operator--()
+    {
+        --it_;
+        return *this;
+    }
+
+    iterator operator--(int)
+    {
+        iterator tmp = *this;
+        --(*this);
+        return tmp;
+    }
+
+    bool operator==(const iterator& other) const
+    {
+        return it_ == other.it_;
+    }
+
+    bool operator!=(const iterator& other) const
+    {
+        return it_ != other.it_;
+    }
+
+private:
+    typename std::map<Key, Value*>::iterator it_;
+    mutable std::pair<Key, Value> pair_;
+};
 #endif  //BIMAP_HPP
