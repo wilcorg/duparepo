@@ -1,11 +1,7 @@
+#include <bimap/BiMap.hpp>
+
 #include <iostream>
-#include <map>
-#include <set>
 #include <string>
-
-#include "biMap.hpp"
-
-#include <vector>
 
 int main()
 {
@@ -45,6 +41,7 @@ int main()
     dupa.insert({110, "hundred ten"});
 
     for (auto& chuj : dupa) {
+        chuj.first = 125;
         std::cout << chuj.first << " " << chuj.second << std::endl;
     }
     return 0;
